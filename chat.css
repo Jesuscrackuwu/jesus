@@ -1,0 +1,969 @@
+/* ============================================================
+   FASTFOOD PREMIUM CHAT — Enterprise Production UI v2.0
+   Architecture: Flex Column Layout (messages scroll, input fixed)
+   Mobile: Visual Viewport API + Safe Areas + dvh support
+   ============================================================ */
+
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root {
+    /* Colors */
+    --accent:              #2563eb;
+    --accent-dark:         #1d4ed8;
+    --accent-light:        rgba(37, 99, 235, 0.08);
+    --bg-app:              #f8fafc;
+    --bg-sidebar:          #ffffff;
+    --bg-main:             #f1f5f9;
+    --bg-input:            #ffffff;
+    --text-main:           #0f172a;
+    --text-muted:          #64748b;
+    --border-color:        #e2e8f0;
+
+    /* Bubbles */
+    --bubble-sent:         #2563eb;
+    --bubble-sent-text:    #ffffff;
+    --bubble-received:     #ffffff;
+    --bubble-received-text:#0f172a;
+
+    /* Shadows */
+    --shadow-sm:  0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.06);
+    --shadow-input: 0 2px 8px rgba(37, 99, 235, 0.08);
+
+    /* Radii */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+
+    /* Layout */
+    --sidebar-width: 340px;
+    --header-height: 68px;
+
+    /*
+     * --navbar-h: Altura del navbar principal de la app (FF-navbar).
+     * Valor inicial de 56px — sobreescrito en tiempo real por JS (_measureNavbarHeight).
+     * Esto asegura que el cálculo de altura sea exacto en cada dispositivo.
+     */
+    --navbar-h: 56px;
+}
+
+/* ============================================================
+   BASE RESET — CHAT PAGE
+   ============================================================ */
+body.chat-page {
+    background-color: var(--bg-app);
+    /* overflow hidden evita el doble scroll en iOS */
+    overflow: hidden;
+    /* Sin padding-bottom — la barra de escritura se gestiona internamente */
+    padding-bottom: 0 !important;
+}
+
+/* ============================================================
+   LAYOUT WRAPPER — El contenedor raíz del chat
+   Arquitectura: flex-row (sidebar | main)
+   Altura = viewport real - navbar, sin overflow hacia afuera
+   ============================================================ */
+.chat-layout-wrapper {
+    display: flex;
+    width: 100%;
+    max-width: 100vw;
+    /*
+     * 100dvh (Dynamic Viewport Height): cambia dinámicamente cuando
+     * la barra del browser aparece/desaparece. Es el valor correcto para PWA.
+     * Fallback a 100vh para browsers < Chrome 108 / Safari 15.4.
+     */
+    height: calc(100dvh - var(--navbar-h, 56px));
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-app);
+    box-sizing: border-box;
+}
+
+/* Fallback para browsers que no soportan dvh */
+@supports not (height: 100dvh) {
+    .chat-layout-wrapper {
+        height: calc(100vh - var(--navbar-h, 56px));
+    }
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.chat-sidebar {
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 50;
+}
+
+.sidebar-header {
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-header h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-main);
+}
+
+.btn-close-sidebar {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    padding: 4px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.sidebar-search {
+    padding: 12px 16px;
+    flex-shrink: 0;
+}
+
+.search-input-wrapper {
+    position: relative;
+    background: #f1f5f9;
+    padding: 9px 14px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-input-wrapper i {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.search-input-wrapper input {
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.88rem;
+    color: var(--text-main);
+}
+
+/* sidebar-content es el único hijo que hace scroll */
+.sidebar-content {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.sidebar-empty {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* ============================================================
+   CHAT LIST ITEMS
+   ============================================================ */
+.chat-list-item {
+    display: flex;
+    padding: 14px 18px;
+    gap: 14px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s ease;
+    border-bottom: 1px solid #f1f5f9;
+    align-items: center;
+}
+
+.chat-list-item:hover {
+    background: #f8fafc;
+}
+
+.chat-list-item.active {
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+}
+
+.chat-list-item.unread .chat-item-name {
+    color: var(--accent);
+}
+
+.chat-item-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+    border: 2px solid #f1f5f9;
+}
+
+.chat-item-avatar img,
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.chat-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.chat-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.chat-item-name {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 0.93rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.chat-item-time {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.chat-item-preview {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.chat-item-preview i {
+    font-size: 0.85rem;
+    color: var(--accent);
+}
+
+.unread-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.chat-list-item.unread .chat-item-preview {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+/* ============================================================
+   MAIN CHAT AREA
+   Arquitectura flex-column: header(fijo) | messages(scroll) | input(fijo)
+   La clave: min-height: 0 en TODOS los contenedores intermedios
+   ============================================================ */
+.chat-main {
+    flex: 1 1 0;
+    min-height: 0;       /* ← CRÍTICO: permite que el hijo calcule su scroll */
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-main);
+    overflow: hidden;
+}
+
+.chat-container-modern {
+    flex: 1 1 0;
+    min-height: 0;       /* ← CRÍTICO: sin esto el input queda fuera de pantalla */
+    display: flex;
+    flex-direction: column;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+    background: #ffffff;
+    box-shadow: var(--shadow-sm);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* ============================================================
+   CHAT HEADER
+   ============================================================ */
+.chat-header-modern {
+    height: var(--header-height);
+    flex-shrink: 0;     /* ← El header NUNCA se encoge */
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 10;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.header-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar-modern {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    object-fit: cover;
+}
+
+.placeholder-avatar {
+    background: #f1f5f9;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.bg-accent {
+    background: var(--accent);
+    color: white;
+}
+
+.status-dot-modern {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 11px;
+    height: 11px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+}
+
+.status-dot-modern.online {
+    background: #10b981;
+}
+
+.text-info-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.header-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+.header-status {
+    font-size: 0.72rem;
+    color: #10b981;
+    font-weight: 600;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-sidebar-toggle {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    padding: 6px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+}
+
+.btn-sidebar-toggle:hover {
+    background: #f1f5f9;
+}
+
+.btn-premium-action {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.87rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s, transform 0.15s;
+    cursor: pointer;
+}
+
+.btn-premium-action:hover {
+    background: var(--accent-dark);
+    transform: translateY(-1px);
+}
+
+.btn-icon-modern {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    cursor: pointer;
+}
+
+.btn-icon-modern:hover {
+    background: #f1f5f9;
+}
+
+/* ============================================================
+   MESSAGES AREA
+   flex: 1 1 0 + min-height: 0 = scroll funciona en contenedores flex
+   ============================================================ */
+.chat-messages-modern {
+    flex: 1 1 0;         /* Ocupa todo el espacio disponible */
+    min-height: 0;       /* ← Permite que overflow-y: auto funcione */
+    padding: 20px 24px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;  /* Scroll suave en iOS */
+    overscroll-behavior: contain;       /* Evita pull-to-refresh accidental */
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-behavior: smooth;
+    box-sizing: border-box;
+}
+
+.msg-wrapper {
+    display: flex;
+    width: 100%;
+}
+
+.msg-sent  { justify-content: flex-end; }
+.msg-received { justify-content: flex-start; }
+
+.message-bubble-modern {
+    max-width: 78%;
+    padding: 11px 15px;
+    border-radius: var(--radius-lg);
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    word-break: break-word;
+}
+
+.msg-sent .message-bubble-modern {
+    background: var(--bubble-sent);
+    color: var(--bubble-sent-text);
+    border-bottom-right-radius: 4px;
+}
+
+.msg-received .message-bubble-modern {
+    background: var(--bubble-received);
+    color: var(--bubble-received-text);
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.msg-sender-name {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.msg-text {
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
+.msg-image-content {
+    margin-bottom: 8px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.msg-image-content img {
+    max-width: 100%;
+    max-height: 280px;
+    cursor: pointer;
+    display: block;
+    border-radius: var(--radius-md);
+}
+
+.msg-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 5px;
+    font-size: 0.63rem;
+    opacity: 0.75;
+}
+
+.msg-sent .msg-footer i.delivered {
+    color: #93c5fd;
+}
+
+/* Receipt Cards */
+.receipt-card-modern {
+    background: rgba(0, 0, 0, 0.06);
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    margin: 8px 0 0;
+}
+
+.receipt-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.receipt-status.pending  { color: #f59e0b; }
+.receipt-status.approved { color: #10b981; }
+.receipt-status.rejected { color: #ef4444; }
+
+.receipt-actions-modern {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.btn-approve-modern,
+.btn-reject-modern {
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.btn-approve-modern:hover,
+.btn-reject-modern:hover {
+    transform: scale(1.1);
+}
+
+.btn-approve-modern { background: #10b981; }
+.btn-reject-modern  { background: #ef4444; }
+
+/* ============================================================
+   INPUT COMPOSER — La barra de escritura
+   flex-shrink: 0 garantiza que NUNCA se encoge ni desaparece.
+   box-sizing: border-box evita desbordamientos de padding.
+   ============================================================ */
+.chat-input-modern {
+    flex-shrink: 0;      /* ← NUNCA se encoge, sin importar el contenido de mensajes */
+    box-sizing: border-box;
+    padding: 14px 20px;
+    /*
+     * env(safe-area-inset-bottom): espacio que ocupa el home indicator
+     * de iOS o la barra de gestos de Android. Requiere viewport-fit=cover
+     * y display:standalone en el manifest.
+     * max() garantiza un mínimo de 14px incluso cuando safe-area es 0.
+     */
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-input);
+    z-index: 20;
+}
+
+.input-composer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 8px 8px 8px 14px;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.input-composer:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: #ffffff;
+}
+
+.btn-attach-modern {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: white;
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.btn-attach-modern:hover {
+    transform: rotate(45deg);
+    box-shadow: var(--shadow-md);
+}
+
+.input-wrapper-inner {
+    flex: 1;
+    min-width: 0;
+}
+
+.input-wrapper-inner input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.93rem;
+    padding: 6px 0;
+    font-weight: 400;
+    color: var(--text-main);
+    box-sizing: border-box;
+}
+
+.input-wrapper-inner input::placeholder {
+    color: var(--text-muted);
+}
+
+.btn-send-modern {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, background 0.2s;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.btn-send-modern:hover {
+    background: var(--accent-dark);
+    transform: scale(1.08);
+}
+
+/* ============================================================
+   IMAGE PREVIEW PANEL
+   ============================================================ */
+.preview-panel {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-md);
+}
+
+.preview-bubble {
+    position: relative;
+    display: inline-block;
+}
+
+.preview-bubble img {
+    height: 90px;
+    border-radius: var(--radius-md);
+    display: block;
+}
+
+.btn-close-preview {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: white;
+    border: 2px solid white;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.receipt-tools {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.custom-switch .form-check-input:checked {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+.total-input-modern input {
+    margin-top: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 0.88rem;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.user-receipt-hint {
+    font-size: 0.78rem;
+    color: var(--accent);
+    font-weight: 500;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ============================================================
+   RESPONSIVE — MOBILE FIRST
+   En móvil: sidebar oculto (deslizable), chat ocupa el 100%.
+   La barra de escritura SIEMPRE visible gracias a flex-shrink:0.
+   ============================================================ */
+@media (max-width: 767.98px) {
+
+    /* Sidebar se convierte en un drawer deslizable desde la izquierda */
+    .chat-sidebar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        transform: translateX(-100%);
+        width: 290px;
+        z-index: 200;
+        box-shadow: none;
+    }
+
+    .chat-sidebar.active {
+        transform: translateX(0);
+        box-shadow: 4px 0 40px rgba(0, 0, 0, 0.15);
+    }
+
+    /* chat-container usa flex:1 1 0 — NO height:100% (eso rompe el layout flex) */
+    .chat-container-modern {
+        flex: 1 1 0;
+        min-height: 0;
+        border-radius: 0;
+        box-shadow: none;
+        max-width: 100%;
+    }
+
+    .chat-header-modern {
+        padding: 0 14px;
+        height: 60px;
+    }
+
+    /* Menos padding en mensajes para maximizar área visible */
+    .chat-messages-modern {
+        padding: 14px 12px;
+        gap: 12px;
+    }
+
+    .message-bubble-modern {
+        max-width: 88%;
+    }
+
+    /*
+     * La barra de escritura en móvil:
+     * - flex-shrink: 0 → no se comprime por los mensajes
+     * - padding-bottom con env() → respeta la zona del home indicator/nav gestures
+     * - box-sizing: border-box → el padding no añade altura extra inesperada
+     */
+    .chat-input-modern {
+        padding: 10px 12px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        flex-shrink: 0;
+        box-sizing: border-box;
+    }
+}
+
+/* Desktop: ocultar el toggle del sidebar */
+@media (min-width: 768px) {
+    .btn-sidebar-toggle {
+        display: none;
+    }
+}
+
+/* ============================================================
+   EMPTY STATES & OVERLAYS
+   ============================================================ */
+.empty-chat-modern {
+    margin: auto;
+    text-align: center;
+    max-width: 280px;
+    padding: 20px;
+}
+
+.empty-icon-wrapper {
+    width: 72px;
+    height: 72px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 2.2rem;
+}
+
+.empty-chat-modern h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.empty-chat-modern p {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.chat-finalized-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(241, 245, 249, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.overlay-card {
+    background: white;
+    padding: 32px 28px;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+}
+
+.overlay-icon {
+    width: 60px;
+    height: 60px;
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 1.8rem;
+}
+
+.overlay-card h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+
+.overlay-card p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0;
+}
+
+.overlay-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn-primary-modern {
+    flex: 1;
+    background: var(--accent);
+    color: white;
+    padding: 11px;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: background 0.2s;
+    display: block;
+}
+
+.btn-primary-modern:hover {
+    background: var(--accent-dark);
+    color: white;
+}
+
+.btn-outline-modern {
+    flex: 1;
+    border: 1.5px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 11px;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: border-color 0.2s, color 0.2s;
+    display: block;
+}
+
+.btn-outline-modern:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}

@@ -34,12 +34,9 @@ class ChatInterface {
     init() {
         this.connectWebSocket();
         this.attachEventListeners();
-
-        // Medir la altura REAL del navbar y pasarla al CSS como variable
-        this._measureNavbarHeight();
         this._initVisualViewport();
 
-        // Scroll al último mensaje al cargar la página (instant, sin animación)
+        // Scroll al último mensaje al cargar (instant, sin animación)
         if (document.readyState === 'complete') {
             this.scrollToBottom(false);
             this._adjustMessagesHeight();
@@ -652,8 +649,6 @@ class ChatInterface {
         window.visualViewport.addEventListener('resize', onViewportChange);
         window.visualViewport.addEventListener('scroll', onViewportChange);
         window.addEventListener('resize', () => {
-            // Recalcular navbar height si el usuario rota la pantalla
-            this._measureNavbarHeight();
             requestAnimationFrame(() => this._adjustMessagesHeight());
         });
     }

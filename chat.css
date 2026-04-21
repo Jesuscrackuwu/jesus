@@ -52,41 +52,63 @@
 
 /* ============================================================
    BASE RESET — CHAT PAGE
+   Arquitectura CSS-pura sin JS:
+   body → flex-column → [navbar | main → flex:1]
+   Esto elimina la condición de carrera del JS que medía el navbar.
    ============================================================ */
 body.chat-page {
     background-color: var(--bg-app);
-    /* overflow hidden evita el doble scroll en iOS */
     overflow: hidden;
-    /* Sin padding-bottom — la barra de escritura se gestiona internamente */
     padding-bottom: 0 !important;
+    /*
+     * SOLUCIÓN DEFINITIVA:
+     * Convertimos el body en un contenedor flex-column.
+     * El navbar toma su altura natural y el <main> ocupa el resto.
+     * Sin calc(), sin JS, sin condición de carrera.
+     */
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;   /* altura total de la pantalla */
+}
+
+/* Fallback para browsers sin dvh */
+@supports not (height: 100dvh) {
+    body.chat-page {
+        height: 100vh;
+    }
+}
+
+/*
+ * El <main> de Django ocupa todo el espacio restante
+ * después del navbar. Necesita min-height:0 para que
+ * su hijo (.chat-layout-wrapper) pueda hacer scroll.
+ */
+body.chat-page > main {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ============================================================
-   LAYOUT WRAPPER — El contenedor raíz del chat
-   Arquitectura: flex-row (sidebar | main)
-   Altura = viewport real - navbar, sin overflow hacia afuera
+   LAYOUT WRAPPER — Ahora simplemente llena el <main>
+   Sin calc(), sin JS measurement, sin condición de carrera.
    ============================================================ */
 .chat-layout-wrapper {
     display: flex;
     width: 100%;
     max-width: 100vw;
     /*
-     * 100dvh (Dynamic Viewport Height): cambia dinámicamente cuando
-     * la barra del browser aparece/desaparece. Es el valor correcto para PWA.
-     * Fallback a 100vh para browsers < Chrome 108 / Safari 15.4.
+     * Con el body flex-column, el <main> ya tiene la altura
+     * correcta. El wrapper solo necesita ocupar el 100%.
      */
-    height: calc(100dvh - var(--navbar-h, 56px));
+    flex: 1 1 0;
+    min-height: 0;
     overflow: hidden;
     position: relative;
     background: var(--bg-app);
     box-sizing: border-box;
-}
-
-/* Fallback para browsers que no soportan dvh */
-@supports not (height: 100dvh) {
-    .chat-layout-wrapper {
-        height: calc(100vh - var(--navbar-h, 56px));
-    }
 }
 
 /* ============================================================

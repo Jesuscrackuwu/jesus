@@ -58,37 +58,38 @@
    ============================================================ */
 body.chat-page {
     background-color: var(--bg-app);
-    overflow: hidden;
-    padding-bottom: 0 !important;
+    overflow: hidden !important;           /* Bootstrap no puede revertir esto */
+    padding-bottom: 0 !important;          /* El navbar mobile no añade padding aquí */
+    margin: 0 !important;
     /*
-     * SOLUCIÓN DEFINITIVA:
-     * Convertimos el body en un contenedor flex-column.
-     * El navbar toma su altura natural y el <main> ocupa el resto.
-     * Sin calc(), sin JS, sin condición de carrera.
+     * SOLUCIÓN DEFINITIVA (CSS-pura, sin JS):
+     * body es flex-column. El navbar toma su altura natural.
+     * El <main> ocupa todo lo que queda. Sin calc(), sin condición de carrera.
      */
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;   /* altura total de la pantalla */
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100dvh !important;
 }
 
 /* Fallback para browsers sin dvh */
 @supports not (height: 100dvh) {
     body.chat-page {
-        height: 100vh;
+        height: 100vh !important;
     }
 }
 
 /*
- * El <main> de Django ocupa todo el espacio restante
- * después del navbar. Necesita min-height:0 para que
- * su hijo (.chat-layout-wrapper) pueda hacer scroll.
+ * El <main> de Django ocupa el espacio restante.
+ * min-height:0 es crítico para que el scroll interno funcione.
  */
 body.chat-page > main {
-    flex: 1 1 0;
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;           /* main.css no añade padding aquí */
+    margin: 0 !important;
 }
 
 /* ============================================================

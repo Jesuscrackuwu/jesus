@@ -1,0 +1,276 @@
+/* main.css — FastFood global styles */
+/* El body base sin background forzado para que chat-page pueda sobreescribir limpiamente */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+
+.btn {
+    border-radius: 0.375rem;
+}
+
+.form-control {
+    border-radius: 0.375rem;
+}
+
+.alert {
+    border-radius: 0.375rem;
+}
+
+/* Chat styles — el CSS completo del chat está en static/css/chat.css
+   NOTA: no poner aquí reglas de #chat-messages — conflictúan con chat.css */
+
+.max-w-75 {
+    max-width: 75%;
+}
+
+/* Navbar brand */
+.navbar-brand {
+    font-weight: 600;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .max-w-75 {
+        max-width: 100%;
+    }
+}
+
+/* Estilos personalizados para FastFood */
+
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+}
+
+/* Estilos adicionales — el bloque body original de arriba ya cubre la fuente */
+
+/* Navbar personalizada */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+/* Cards mejoradas */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    font-weight: 600;
+}
+
+/* Tablas mejoradas */
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: var(--dark-color);
+    background-color: var(--light-color);
+}
+
+/* Botones personalizados */
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.5rem 1rem rgba(102, 126, 234, 0.3);
+}
+
+/* Formularios mejorados */
+.form-control {
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Alertas personalizadas */
+.alert {
+    border-radius: 0.375rem;
+    border: none;
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+}
+
+/* Sidebar para dashboards */
+.sidebar {
+    background-color: white;
+    border-right: 1px solid #dee2e6;
+    height: calc(100vh - 56px);
+    position: fixed;
+    top: 56px;
+    left: 0;
+    width: 250px;
+    overflow-y: auto;
+}
+
+.sidebar .nav-link {
+    color: var(--dark-color);
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin: 0.125rem 0.5rem;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.main-content {
+    margin-left: 250px;
+    padding: 20px;
+}
+
+/* Chat styles — see static/css/chat.css for full chat UI */
+.chat-messages {
+    /* Height managed by chat.css flex layout */
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1rem;
+}
+
+.message-bubble {
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.message-bubble.own {
+    margin-left: auto;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.message-bubble.other {
+    background-color: white;
+    border: 1px solid #dee2e6;
+}
+
+/* Restaurante cards */
+.restaurant-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.restaurant-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Menu items */
+.menu-item {
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+.menu-item:hover {
+    border-left-color: var(--primary-color);
+    background-color: var(--light-color);
+}
+
+/* Order status badges */
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+    }
+}
+
+/* Loading spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner 0.75s linear infinite;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

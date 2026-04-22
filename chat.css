@@ -843,16 +843,30 @@ body.chat-page > main {
     }
 
     /*
-     * La barra de escritura en móvil:
-     * - flex-shrink: 0 → no se comprime por los mensajes
-     * - padding-bottom con env() → respeta la zona del home indicator/nav gestures
-     * - box-sizing: border-box → el padding no añade altura extra inesperada
+     * SOLUCIÓN TECLADO VIRTUAL (Visual Viewport API):
+     * position:fixed saca la barra del flujo flex y la ancla al viewport.
+     * Cuando el teclado sube, JS actualiza `bottom` en tiempo real.
+     * El padding-bottom en mensajes evita que el último mensaje quede
+     * oculto detrás de la barra fija.
      */
     .chat-input-modern {
+        position: fixed !important;
+        left: 0;
+        right: 0;
+        bottom: 0;           /* JS lo moverá al abrirse el teclado */
+        z-index: 100;
         padding: 10px 12px;
         padding-bottom: max(12px, env(safe-area-inset-bottom));
-        flex-shrink: 0;
         box-sizing: border-box;
+        background: var(--bg-input);
+        border-top: 1px solid var(--border-color);
+        /* Sombra para que la barra "flote" visualmente sobre los mensajes */
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Espacio debajo del último mensaje para que no quede detrás de la barra fija */
+    .chat-messages-modern {
+        padding-bottom: 90px !important;
     }
 }
 
